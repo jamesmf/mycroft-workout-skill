@@ -1,22 +1,14 @@
 
 skillMetadata:
   sections:
-    - name: Options << Name of section
+    - name: Workout
       fields:
-        - name: internal_python_variable_name
+        - name: exercise_list
           type: text
-          label: Setting Friendly Display Name
-          value: ""
-          placeholder: demo prompt in the input box
-    - name: Login << Name of another section
-      fields:
-        - type: label
-          label: Just a little bit of extra info for the user to understand following settings
-        - name: username
-          type: text
-          label: Username
-          value: ""
-        - name: password
-          type: password
-          label: Password
-          value: ""
+          label: representation of your workout
+          value: plank|30|1|switch,crunches|30||switch,push ups|30|15|
+          placeholder:
+        - name: "rest_len"
+          type: number
+          label: Number of seconds to rest between exercises
+          value: 5
