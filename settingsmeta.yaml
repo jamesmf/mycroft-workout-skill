@@ -6,7 +6,7 @@ skillMetadata:
         - name: exercise_list
           type: text
           label: representation of your workout
-          value: plank|30|1|switch,crunches|30||switch,push ups|30|15|
+          value: jumping jacks|30||,wall sits|30||,push ups|30||,abdominal crunches|30||,step up onto chair|30||,squats|30||,tricep dips|30||,plank|30||,high knees|30||,lunges|30||,push up and rotation|30||switch,side plank|30||switch,,
           placeholder:
         - name: "rest_len"
           type: number
