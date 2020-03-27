@@ -1,10 +1,13 @@
 from mycroft import MycroftSkill, intent_file_handler
 import time
 import json
+from typing import List
 
 
 class Exercise:
-    def __init__(self, name, length, switch=False, beep_every=0):
+    def __init__(
+        self, name: str, length: int, switch: bool = False, beep_every: int = 0
+    ):
         self.name = name
         self.length = length
         self.switch = switch
@@ -14,20 +17,23 @@ class Exercise:
 class WorkoutTimer(MycroftSkill):
     def __init__(self):
         MycroftSkill.__init__(self)
-        self.in_workout = False
+        self.in_workout: bool = False
 
     def initialize(self):
-        self.log.info(str(self.settings.get("exercises_json")))
         self.settings_change_callback = self.handle_settings
         self.handle_settings()
 
     def handle_settings(self):
-        ex = self.settings.get("exercise_list", "")
+        """
+        Handles setting the necessary attributes on our object given
+        the values in `settings`. Also runs when settings get updated.
+        """
+        ex: str = self.settings.get("exercise_list", "")
         self.log.info(ex)
         self.exercises = self.parse_exercises(ex)
         self.rest_len = self.settings.get("rest_len")
 
-    def parse_exercises(self, ex_str):
+    def parse_exercises(self, ex_str: str) -> List[Exercise]:
         """
         Parse a comma-delimited string of exercises in the format
           name | length | beep_every (optional) | switch (optional)
@@ -63,9 +69,19 @@ class WorkoutTimer(MycroftSkill):
         self.run_workout()
 
     def stop(self):
+        """
+        If we get a stop command in the middle of a workout, we need a way
+        to stop. Setting `self.in_workout = False` will cause the skill to
+        stop the workout the next time the skill wakes.
+        """
         self.in_workout = False
 
     def run_workout(self):
+        """
+        Iterate through the skill's exercises. If `self.in_workout` becomes
+        False during the workout, we abort. If there is a specified `rest_len`
+        then we also rest between each exercise.
+        """
         self.in_workout = True
         for n, exercise in enumerate(self.exercises):
             self.run_exercise(exercise)
@@ -78,24 +94,40 @@ class WorkoutTimer(MycroftSkill):
                 self.run_exercise(Exercise("Rest", self.rest_len))
 
     def run_exercise(self, exercise):
+        """
+        Mycroft walks you through your workout by telling you to begin the next
+        exercise, optionally giving you time feedback, then telling you when
+        that exercise is over. Since TTS takes time, the timing feedback can
+        get out of sync. The skill measures elapsed time, so that issue should
+        not compound (each exercise should only last its `length` plus the
+        time it took for Mycroft to speak the next exercise/rest).
+        """
         self.speak("begin {}".format(exercise.name))
+        # keep track of elapsed time
         start = time.time()
         for n in range(0, exercise.length):
+            # if it's a two-sided exercise, switch halfway through
             if exercise.switch and n == exercise.length // 2:
-                self.speak("switch")
+                self.speak("switch sides")
             elif n > 0 and exercise.beep_every > 0 and n % exercise.beep_every == 0:
+                # if we're keeping track of time, provide time feedback
                 self.beep()
-            if self.in_workout == False:
+            # if we get a `stop` command, end the exercise
+            if not self.in_workout:
                 return
+            # check back in every second to see if we should stop and to
+            # sync up elapsed time with sleep time.
             elapsed = time.time() - start
             sleeptime = n + 1 - elapsed
             if n + 1 - elapsed < 0:
                 sleeptime += 1
                 n += 1
-            self.log.info("n: {}, sleep: {}, elapsed: {}".format(n, sleeptime, elapsed))
             time.sleep(sleeptime)
 
     def beep(self):
+        """
+        # todo: better timing feedback. Possibly play a short, ticking sound.
+        """
         self.speak("do")
 
 
